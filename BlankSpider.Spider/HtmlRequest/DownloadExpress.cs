@@ -55,6 +55,45 @@ namespace BlankSpider.Spider.HtmlRequest
             return htmlData;
         }
 
+        public static string Download(string url, string method, Encoding encodingType)
+        {
+            if (Utility.Utility.IsStringNullOrEmpty(url))
+                return Utility.Utility.InitializeString;
+
+            HttpWebRequest webreq = (HttpWebRequest)WebRequest.Create(url);
+            webreq.UserAgent = "Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.8.0.1) Gecko/20060111 Firefox/1.5.0.1";
+            webreq.Method = method;
+            webreq.KeepAlive = true;
+            webreq.Referer = url;
+            webreq.ContentType = "application/x-www-form-urlencoded";
+            webreq.Timeout = 2000;
+            webreq.Accept = "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8";
+
+            HttpWebResponse response = null;
+            try
+            {
+                response = (HttpWebResponse)webreq.GetResponse();
+            }
+            catch
+            {
+                return Utility.Utility.InitializeString;
+            }
+            if (encodingType == null)
+                encodingType = Encoding.UTF8;
+
+            string htmlData = string.Empty;
+            try
+            {
+                StreamReader responseStream = new StreamReader(response.GetResponseStream(), encodingType);
+                htmlData = responseStream.ReadToEnd();
+                response.Close();
+                responseStream.Close();
+            }
+            catch { }
+
+            return htmlData;
+        }
+
         public static string DownloadPost(string url, string postData)
         {
             return DownloadPost(url, postData, null);
@@ -108,6 +147,71 @@ namespace BlankSpider.Spider.HtmlRequest
                     sb.Append(line);
                 }
             }
+            return sb.ToString();
+        }
+
+        public static String getResponseString(string url, string poststring, string ContentType)
+        {
+            HttpWebRequest httpRequest =
+            (HttpWebRequest)WebRequest.Create(url);
+
+            httpRequest.ContentType = ContentType;
+
+            httpRequest.AllowAutoRedirect = true;
+            httpRequest.KeepAlive = true;
+            httpRequest.ProtocolVersion = HttpVersion.Version10;
+            httpRequest.UserAgent = "Mozilla/5.0 (Windows; U; Windows NT 5.2; en-US; rv:1.8.1.14) Gecko/20080404 Firefox/2.0.0.14";
+            httpRequest.Referer = url;
+            httpRequest.Timeout = 120 * 1000;
+
+            httpRequest.Accept = ContentType;
+
+
+
+
+            if (poststring != "")
+            {
+                httpRequest.Method = "POST";
+
+                //byte[] bytedata = Encoding.UTF8.GetBytes(poststring);
+                byte[] bytedata = ASCIIEncoding.ASCII.GetBytes(poststring);
+                httpRequest.ContentLength = bytedata.Length;
+
+                Stream requestStream = httpRequest.GetRequestStream();
+                requestStream.Write(bytedata, 0, bytedata.Length);
+                requestStream.Close();
+            }
+
+            StringBuilder sb = new StringBuilder();
+            try
+            {
+                HttpWebResponse httpWebResponse = (HttpWebResponse)httpRequest.GetResponse();
+                Stream responseStream = httpWebResponse.GetResponseStream();
+
+                using (StreamReader reader = new StreamReader(responseStream, System.Text.Encoding.UTF8))
+                {
+                    string line;
+                    while ((line = reader.ReadLine()) != null)
+                    {
+                        sb.Append(line);
+                    }
+                }
+
+                
+            }
+            catch(Exception _exError) { }
+            
+
+
+            //WebHeaderCollection headers = httpWebResponse.Headers;
+
+            //if (headers["Set-Cookie"] != null)
+            //{
+            //    cookieManager.addCookie(cookieManager.processCookie(headers["Set-Cookie"]));
+            //}
+
+            
+           
             return sb.ToString();
         }
 
